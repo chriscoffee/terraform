@@ -108,6 +108,11 @@ func resourceAwsAlb() *schema.Resource {
 				Default:  60,
 			},
 
+			"ip_address_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -156,6 +161,10 @@ func resourceAwsAlbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("subnets"); ok {
 		elbOpts.Subnets = expandStringList(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("ip_address_type"); ok {
+		elbOpts.IpAddressType = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
