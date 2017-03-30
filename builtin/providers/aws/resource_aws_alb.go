@@ -110,6 +110,7 @@ func resourceAwsAlb() *schema.Resource {
 
 			"ip_address_type": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 
@@ -334,6 +335,20 @@ func resourceAwsAlbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("ip_address_type") {
+
+		params := &elbv2.SetIpAddressTypeInput{
+			LoadBalancerArn: aws.String(d.Id()),
+			IpAddressType:   aws.String(d.Get("ip_address_type").(string)),
+		}
+
+		_, err := elbconn.SetIpAddressType(params)
+		if err != nil {
+			return fmt.Errorf("Failure Setting ALB IP Address Type: %s", err)
+		}
+
+	}
+
 	return resourceAwsAlbRead(d, meta)
 }
 
@@ -390,6 +405,7 @@ func flattenAwsAlbResource(d *schema.ResourceData, meta interface{}, alb *elbv2.
 	d.Set("vpc_id", alb.VpcId)
 	d.Set("zone_id", alb.CanonicalHostedZoneId)
 	d.Set("dns_name", alb.DNSName)
+	d.Set("ip_address_type", alb.IpAddressType)
 
 	respTags, err := elbconn.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{alb.LoadBalancerArn},
